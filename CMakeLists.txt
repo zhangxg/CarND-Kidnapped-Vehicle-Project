@@ -7,7 +7,15 @@ add_definitions(-std=c++11)
 set(CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
 
-set(sources src/particle_filter.cpp src/main.cpp)
+set(sources 
+     11_Markov_Localization/src/main.cpp
+     11_Markov_Localization/src/help_functions.h
+     11_Markov_Localization/src/map.h
+     11_Markov_Localization/src/measurement_package.h
+#    src/particle_filter.cpp 
+#    src/main.cpp
+
+    )
 
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
