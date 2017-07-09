@@ -32,6 +32,8 @@ bayesianFilter::bayesianFilter() {
 	// bel_x_init = false;
 	bel_x_init.resize(100,0);
 
+	observation_std = 1.0f;
+
 }
 
 //de-constructor:
@@ -121,9 +123,79 @@ void bayesianFilter::process_measurement(const MeasurementPackage &measurements,
 			posterior_motion += transition_prob*bel_x_init[j];
 		}
 
+
+		/**************************************************************************
+		 *  observation update:
+		**************************************************************************/
+		//define pseudo observation vector:
+		std::vector<float> pseudo_ranges ;
+
+		//define maximum distance:
+		float distance_max = 100;
+			
+		//loop over number of landmarks and estimate pseudo ranges:
+		for (unsigned int l=0; l<map_1d.landmark_list.size(); ++l){
+
+			//calculate difference between landmark position
+			// and current believe state index
+			float range_l = map_1d.landmark_list[i].x_f - pose_i;
+			
+			//check, if distances are positive, and store positive range: 
+			if(range_l > 0) {
+				pseudo_ranges.push_back(range_l) ;	
+			}
+		}
+
+		//sort pseudo range vector:
+		sort(pseudo_ranges.begin(), pseudo_ranges.end());
+
+		//define observation posterior:
+		float posterior_obs = 1.0f ;
+		
+		//run over current observations vector defined above:
+		for (unsigned int z=0; z<observations.distance_f.size(); ++z){
+
+			//define min distance:
+			// TODO: set min distance either to the closet landmark
+			// or if no landmarks exist to the maximum set distance
+			//estimate the posterior for observation model: 
+			// MULTIPLY by normpdf of obseravations distance, 
+			// min distance, and obseravtion_std
+			//posterior_obs*= 
+
+			//define min distance:
+			float pseudo_range_min;
+
+			//check, if distance vector exists:
+			if(pseudo_ranges.size() > 0){
+
+				//set min distance:
+				pseudo_range_min = pseudo_ranges[0];
+				//remove this entry from pseudo_ranges-vector:
+				pseudo_ranges.erase(pseudo_ranges.begin());
+
+			}
+			//no or negative distances: set min distance to maximum distance:
+			else{
+				pseudo_range_min = distance_max ;
+			}
+
+			//estimate the posterior for observation model: 
+			posterior_obs*= helpers.normpdf(observations.distance_f[z], 
+											pseudo_range_min,
+											observation_std); 
+		}
+
 		//TODO: update = motion_model 
 		// set as the posterior_motion
-		bel_x[i] = posterior_motion;
+		// bel_x[i] = posterior_motion;
+
+		/**************************************************************************
+		 *  finalize bayesian localization filter:
+		 *************************************************************************/
+		
+		//update = observation_update* motion_model
+		bel_x[i] = posterior_obs*posterior_motion ;
 	};
 	//TODO: normalize bel_x:
 	bel_x = helpers.normalize_vector(bel_x);

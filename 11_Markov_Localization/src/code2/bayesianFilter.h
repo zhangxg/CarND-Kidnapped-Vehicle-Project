@@ -53,6 +53,9 @@ private:
 
 	// bool bel_x_init;
 	std::vector<float> bel_x_init;
+	
+	//precision of observations as standard deviation:
+	float observation_std ;
 
 };
 
