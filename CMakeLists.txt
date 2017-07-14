@@ -8,20 +8,22 @@ set(CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
 
 set(sources 
-     11_Markov_Localization/src/code2/main.cpp
-     11_Markov_Localization/src/code2/help_functions.h
-     11_Markov_Localization/src/code2/map.h
-     11_Markov_Localization/src/code2/measurement_package.h
-     11_Markov_Localization/src/code2/bayesianFilter.h
-     11_Markov_Localization/src/code2/bayesianFilter.cpp
+#    14_Particle_Filter_CPP/src/initialize.cpp
+
+#     11_Markov_Localization/src/code2/main.cpp
+#     11_Markov_Localization/src/code2/help_functions.h
+#     11_Markov_Localization/src/code2/map.h
+#     11_Markov_Localization/src/code2/measurement_package.h
+#     11_Markov_Localization/src/code2/bayesianFilter.h
+#     11_Markov_Localization/src/code2/bayesianFilter.cpp
 
 #     11_Markov_Localization/src/main.cpp
 #     11_Markov_Localization/src/help_functions.h
 #     11_Markov_Localization/src/map.h
 #     11_Markov_Localization/src/measurement_package.h
 
-#    src/particle_filter.cpp 
-#    src/main.cpp
+    src/particle_filter.cpp 
+    src/main.cpp
 
     )
 

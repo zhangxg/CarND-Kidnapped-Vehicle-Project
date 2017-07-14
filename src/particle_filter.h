@@ -12,7 +12,6 @@
 #include "helper_functions.h"
 
 struct Particle {
-
 	int id;
 	double x;
 	double y;
@@ -29,8 +28,6 @@ class ParticleFilter {
 	
 	// Number of particles to draw
 	int num_particles; 
-	
-	
 	
 	// Flag, if filter is initialized
 	bool is_initialized;
@@ -59,6 +56,14 @@ public:
 	 * @param std[] Array of dimension 3 [standard deviation of x [m], standard deviation of y [m]
 	 *   standard deviation of yaw [rad]]
 	 */
+	/**
+		xg:
+		it's all about the predict the location of the vehicle, but we don't know it. 
+		what we can do is initialize many many particles, which represents the all the possible 
+		locations of the car, and by some magic processing, these particles can tell us
+		where the car is. 
+
+	*/
 	void init(double x, double y, double theta, double std[]);
 
 	/**
@@ -70,6 +75,11 @@ public:
 	 * @param velocity Velocity of car from t to t+1 [m/s]
 	 * @param yaw_rate Yaw rate of car from t to t+1 [rad/s]
 	 */
+	/**
+	if we know the velocity and angle of the car, then after time delta_t, we can calcualte 
+	the positions of all the particles (also considering the noise)
+
+	*/
 	void prediction(double delta_t, double std_pos[], double velocity, double yaw_rate);
 	
 	/**
@@ -78,6 +88,16 @@ public:
 	 * @param predicted Vector of predicted landmark observations
 	 * @param observations Vector of landmark observations
 	 */
+
+	/**
+		xg: 
+		
+		this is not about the particles, it's another side of the story, the landmark side. 
+		to calculate the nearest neighbour, need to know the 
+		if the observation landmark is the is the landmark given by sensors, then what's the 
+		predicted landmark? 
+
+	*/
 	void dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations);
 	
 	/**
