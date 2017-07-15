@@ -79,6 +79,19 @@ void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, P
 	particle.weight = producted_wight;
 }
 
+void normalizeWeights(std::vector<Particle>& particles) {
+	double weight_sum = 0;
+	for (int i = 0; i < particles.size(); ++i)
+	{
+		weight_sum += particles[i].weight;
+	}
+	for (int i = 0; i < particles.size(); ++i)
+	{
+		particles[i].weight = particles[i].weight / weight_sum;
+	}
+}
+
+// -------------------------- requrird methods -----------------------
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -171,7 +184,41 @@ void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight. 
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+	std::vector<Particle> picked_particle;
+	// std::random_device rd;
+ //  std::mt19937 gen(rd());
 
+ //  std::uniform_int_distribution<int> uni(0,num_particles); 
+	// auto index = uni(gen);
+	// print(index);
+
+	std::default_random_engine generator;
+  std::uniform_real_distribution<double> distribution(0.0,1.0);
+  int index = int(distribution(generator)*num_particles);
+
+  double  beta = 0;
+  std::vector<double> imp_weights;
+  for (int i = 0; i < num_particles; ++i)
+  {
+  	imp_weights.push_back(particles[i].weight);
+  }
+  // double w_max = max_element(normalizeWeights(particles));
+  std::vector<double>::iterator max_result;
+  max_result = max_element(imp_weights.begin(), imp_weights.end());
+  // double w_max = max_element(imp_weights.begin(), imp_weights.end()); //error
+  double w_max = imp_weights[std::distance(imp_weights.begin(), max_result)];
+
+  for (int i = 0; i < num_particles; ++i)
+  {
+  	beta += distribution(generator)* 2 * w_max;
+  	while (imp_weights[index] < beta) {
+  		beta -= imp_weights[index];
+  		index = (index + 1) % num_particles;
+  	}
+  	picked_particle.push_back(particles[index]);
+  }
+
+  normalizeWeights(picked_particle);
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)

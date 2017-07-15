@@ -5,6 +5,8 @@
 #include <math.h>
 #include "map.h"
 #include <iterator>
+#include <random>
+#include <map>
 
 using namespace std;
 
@@ -200,6 +202,18 @@ void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, P
 	particle.weight = producted_wight;
 }
 
+void normalizeWeights(std::vector<Particle>& particles) {
+	double weight_sum = 0;
+	for (int i = 0; i < particles.size(); ++i)
+	{
+		weight_sum += particles[i].weight;
+	}
+	for (int i = 0; i < particles.size(); ++i)
+	{
+		particles[i].weight = particles[i].weight / weight_sum;
+	}
+}
+
 // TODO: make a map for easy access. 
 Map initializeMap() {
 	Map map;
@@ -261,103 +275,144 @@ std::vector<LandmarkObs> initializeObservations(Particle p) {
   return observations;
 };
 
-int main() {
-	// -------------- TEST THE WIGHTS CALCULATION --------------
-	double sigma_landmark [2] = {0.3, 0.3};
-	Map mp = initializeMap();
-	Particle p = initializeParticle();
-	std::vector<LandmarkObs> observations = initializeObservations(p);
-	p.associations = associate(observations, mp);
-	printIntVector(p.associations);
-	calculateWeight(observations, mp, p, sigma_landmark);
-	cout << "WIGHTS:" << p.weight << endl;
 
-	///*
-	// -------------- TEST THE ASSOCIATION --------------
-  // int A[10] = {0, 2, 3, 1, 10, 34, 4};
-  // const int N = sizeof(A) / sizeof(int);
-  // std::vector<double> A;
-  // A.push_back(0.88778);
-  // A.push_back(4.778998);
-  // A.push_back(3.543);
-  // A.push_back(3.90);
-  // A.push_back(300.90);
+// int main() {
+// 	//-------------- TEST RESAMPLE --------------
+// 	std::default_random_engine generator;
+//   std::uniform_real_distribution<double> uni(0.0,1.0);
+// 	for (int i = 0; i < 1000; ++i)
+// 	{
+// 		double number = uni(generator);	
+// 		cout << number << endl;
+// 		cout << int(number*100) << endl;
+// 	}
+  
 
-  // //this works
-  // std::vector<double>::iterator result;
-  // result = max_element(A.begin(), A.end());
-  // std::cout << "max element at: " << std::distance(A.begin(), result) << '\n'; 
+//   //   std::random_device rd;
+//   //   std::mt19937 gen(rd());
 
-  // cout << "Index of max element: "
-  //      // << std::distance(A, max_element(begin(A), end(A)))
-  // 				// << std::distance(begin(A), end(A))
-  //      << max_element(A.begin(), A.end())
-  //      << endl;
+//   //   std::uniform_int_distribution<int> uni(0,100); // guaranteed unbiased
+// 		// auto random_integer = uni(gen);
+// 		// cout << random_integer << endl;
 
-  // Map map = initializeMap();
-  // Particle p = initializeParticle();
-  // std::vector<LandmarkObs> observations = initializeObservations(p);
+//     // std::discrete_distribution<> d({40, 10, 10, 40});
+//     // std::map<int, int> m;
+//     // cout << d(gen) << endl;
+//     // for(int n=0; n<10000; ++n) {
+//     //     ++m[d(gen)];
+//     // }
+//     // for(auto p : m) {
+//     //     std::cout << p.first << " generated " << p.second << " times\n";
+//     // }
+// 	// // -------------- TEST THE WIGHTS CALCULATION --------------
+// 	// double sigma_landmark [2] = {0.3, 0.3};
+// 	// Map mp = initializeMap();
+// 	// Particle p = initializeParticle();
+// 	// std::vector<LandmarkObs> observations = initializeObservations(p);
+// 	// p.associations = associate(observations, mp);
+// 	// printIntVector(p.associations);
+// 	// calculateWeight(observations, mp, p, sigma_landmark);
+// 	// cout << "WIGHTS:" << p.weight << endl;
+// 	// std::vector<Particle> particles;
+// 	// particles.push_back(p);
+// 	// normalizeWeights(particles);
+// 	// for (int i = 0; i < particles.size(); ++i)
+// 	// {
+// 	// 	cout << particles[i].weight << endl;
+// 	// }
 
-  // std::vector<int> v;
-  // v = associate(observations, map);
-  // for (int i = 0; i < v.size(); ++i)
-  // {
-  // 	cout << v[i] << endl;
-  // }
-	// */
-	/*	
-	// -------------- TEST THE TRANSFORMATION --------------
-	// cout << "hello, world" << endl;
-	// std::vector<double> o;
-	// o.push_back(2);
-	// o.push_back(2);
-	// o.push_back(-90.0/180*M_PI);
-	// // o[0] = 2;
-	// // o[1] = 2;
-	// // o[2] = -90/180*M_PI;
-	// std::vector<double> p;
-	// p.push_back(4);
-	// p.push_back(5);
-	// // p[0] = 4;
-	// // p[1] = 5;
+// 	///*
+// 	// -------------- TEST THE ASSOCIATION --------------
+//   // int A[10] = {0, 2, 3, 1, 10, 34, 4};
+//   // const int N = sizeof(A) / sizeof(int);
+//   // std::vector<double> A;
+//   // A.push_back(0.88778);
+//   // A.push_back(4.778998);
+//   // A.push_back(3.543);
+//   // A.push_back(3.90);
+//   // A.push_back(300.90);
 
-	LandmarkObs o;
-	// o.x = 0;
-	// o.y = -4;
-	o.x = 2;
-	o.y = 2;
-	o.id = 1;
+//   // //this works
+//   // std::vector<double>::iterator result;
+//   // result = max_element(A.begin(), A.end());
+//   // std::cout << "max element at: " << std::distance(A.begin(), result) << '\n'; 
+
+//   // cout << "Index of max element: "
+//   //      // << std::distance(A, max_element(begin(A), end(A)))
+//   // 				// << std::distance(begin(A), end(A))
+//   //      << max_element(A.begin(), A.end())
+//   //      << endl;
+
+//   // Map map = initializeMap();
+//   // Particle p = initializeParticle();
+//   // std::vector<LandmarkObs> observations = initializeObservations(p);
+
+//   // std::vector<int> v;
+//   // v = associate(observations, map);
+//   // for (int i = 0; i < v.size(); ++i)
+//   // {
+//   // 	cout << v[i] << endl;
+//   // }
+// 	// 
+// 	/*	
+// 	// -------------- TEST THE TRANSFORMATION --------------
+// 	// cout << "hello, world" << endl;
+// 	// std::vector<double> o;
+// 	// o.push_back(2);
+// 	// o.push_back(2);
+// 	// o.push_back(-90.0/180*M_PI);
+// 	// // o[0] = 2;
+// 	// // o[1] = 2;
+// 	// // o[2] = -90/180*M_PI;
+// 	// std::vector<double> p;
+// 	// p.push_back(4);
+// 	// p.push_back(5);
+// 	// // p[0] = 4;
+// 	// // p[1] = 5;
+
+// 	LandmarkObs o;
+// 	// o.x = 0;
+// 	// o.y = -4;
+// 	o.x = 2;
+// 	o.y = 2;
+// 	o.id = 1;
 
 
-	Particle p;
-	p.x = 4;
-	p.y = 5;
-	// p.theta = -90/180*M_PI;   // 90/180 = 0. this leads to calculation error;
-	p.theta = -90.0/180*M_PI;
+// 	Particle p;
+// 	p.x = 4;
+// 	p.y = 5;
+// 	// p.theta = -90/180*M_PI;   // 90/180 = 0. this leads to calculation error;
+// 	p.theta = -90.0/180*M_PI;
 
-	// std::vector<double> t = transformCoordinate(o, p);
-	LandmarkObs t;
-	t = transformCoordinate(o, p);
-	cout << "result==" << endl;
-	// cout << t[0] << ", " << t[1] << endl;
-	cout << t.x << ", " << t.y << ", " << t.id << endl;
-	cout << o.x << ", " << o.y << endl;
-	*/
-	return 0;
-}
-
-
-// int main() 
-// {
-//     std::vector<double> v; //{ 3, 1, 4 };
-//     v.push_back(3);
-//     v.push_back(1);
-//     v.push_back(4);
-//     std::cout << "distance(first, last) = "
-//               << std::distance(v.begin(), v.end()) << '\n'
-//               << "distance(last, first) = "
-//               << std::distance(v.end(), v.begin()) << '\n';
+// 	// std::vector<double> t = transformCoordinate(o, p);
+// 	LandmarkObs t;
+// 	t = transformCoordinate(o, p);
+// 	cout << "result==" << endl;
+// 	// cout << t[0] << ", " << t[1] << endl;
+// 	cout << t.x << ", " << t.y << ", " << t.id << endl;
+// 	cout << o.x << ", " << o.y << endl;
+// 	*/
+// 	return 0;
 // }
+
+
+int main() 
+{
+    std::vector<double> v; //{ 3, 1, 4 };
+    v.push_back(3.3);
+    v.push_back(1.33);
+    v.push_back(4.890);
+
+    std::vector<double>::iterator min_result;
+    min_result = min_element(v.begin(), v.end());
+    int index = std::distance(v.begin(), min_result);
+    cout << v[index] << endl;
+
+    std::cout << "distance(first, last) = "
+              << std::distance(v.begin(), v.end()) << '\n'
+              << "distance(last, first) = "
+              << std::distance(v.end(), v.begin()) << '\n';
+}
 
 
 
