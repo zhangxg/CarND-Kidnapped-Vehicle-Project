@@ -33,6 +33,22 @@ LandmarkObs transformCoordinate(LandmarkObs obs, Particle particle) {
 	return transformed;
 }
 
+std::vector<int> associate(std::vector<LandmarkObs> observations, Map map_landmarks) {
+	std::vector<int> associated;
+	for (int j = 0; j < observations.size(); ++j) {
+		LandmarkObs o = observations[j];
+		std::vector<double> dists;
+		for (int i = 0; i < map_landmarks.landmark_list.size(); ++i) {
+			Map::single_landmark_s lm = map_landmarks.landmark_list[i];
+			dists.push_back(sqrt((o.x-lm.x_f)*(o.x-lm.x_f) + (o.y-lm.y_f)*(o.y-lm.y_f)));
+		}
+		std::vector<double>::iterator min_result;
+		min_result = min_element(dists.begin(), dists.end());
+		associated.push_back(distance(dists.begin(), min_result));
+	}
+	return associated;
+}
+
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -114,6 +130,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		}
 
 		// do association: associate the transformed observation with the real landmarks, using the nearest neighbour
+		particles[i].associations = associate(transed, map_landmarks);
+
+		//calculate weights
 		
 			
 	}
