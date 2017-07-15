@@ -49,6 +49,36 @@ std::vector<int> associate(std::vector<LandmarkObs> observations, Map map_landma
 	return associated;
 }
 
+void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, Particle& particle, double std_landmark[]) {
+	double ox, oy, lx, ly, stdx, stdy;
+	std::vector<double> weights;
+	for (int i = 0; i < particle.associations.size(); ++i)
+	{
+		int landmark_index = particle.associations[i];
+		ox = observations[i].x;
+		oy = observations[i].y;
+		stdx = std_landmark[0];
+		stdy = std_landmark[1];
+		// find the associated landmark coordinates. fixme, efficiency
+		for (int k = 0; k < map_landmarks.landmark_list.size(); ++k)
+		{
+			if (landmark_index == map_landmarks.landmark_list[k].id_i) {
+				lx = map_landmarks.landmark_list[k].x_f;
+				ly = map_landmarks.landmark_list[k].y_f;
+			}
+		}
+		double weight;
+		weight = exp(-0.5*((ox-lx)*(ox-lx)/(stdx*stdx) + (oy-ly)*(oy-ly)/(stdy*stdy))) / (2*M_PI*stdx*stdy);
+		weights.push_back(weight);
+	}
+	double producted_wight = 1;
+	for (int i = 0; i < weights.size(); ++i)
+	{
+		producted_wight *= weights[i];
+	}
+	particle.weight = producted_wight;
+}
+
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
@@ -133,16 +163,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		particles[i].associations = associate(transed, map_landmarks);
 
 		//calculate weights
-		
-			
+		calculateWeight(transed, map_landmarks, particles[i], std_landmark);
 	}
-
-	
-
-
-	// weight
-
-
 }
 
 void ParticleFilter::resample() {

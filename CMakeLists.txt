@@ -22,9 +22,9 @@ set(sources
 #     11_Markov_Localization/src/map.h
 #     11_Markov_Localization/src/measurement_package.h
 
-#    src/particle_filter.cpp 
-#    src/main.cpp
-    src/test_boot.cpp
+    src/particle_filter.cpp 
+    src/main.cpp
+#    src/test_boot.cpp
 
     )
 
