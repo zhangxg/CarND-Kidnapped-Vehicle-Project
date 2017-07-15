@@ -147,7 +147,7 @@ std::vector<int> associate(std::vector<LandmarkObs> observations, Map map_landma
 	return associated;
 }
 
-void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, Particle particle, double std_landmark[]) {
+void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, Particle& particle, double std_landmark[]) {
 	double ox, oy, lx, ly, stdx, stdy;
 	std::vector<double> weights;
 	for (int i = 0; i < particle.associations.size(); ++i)
@@ -192,6 +192,12 @@ void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, P
 		// }
 	}
 	printDoubleVector(weights, true);
+	double producted_wight = 1;
+	for (int i = 0; i < weights.size(); ++i)
+	{
+		producted_wight *= weights[i];
+	}
+	particle.weight = producted_wight;
 }
 
 // TODO: make a map for easy access. 
@@ -264,6 +270,7 @@ int main() {
 	p.associations = associate(observations, mp);
 	printIntVector(p.associations);
 	calculateWeight(observations, mp, p, sigma_landmark);
+	cout << "WIGHTS:" << p.weight << endl;
 
 	///*
 	// -------------- TEST THE ASSOCIATION --------------
