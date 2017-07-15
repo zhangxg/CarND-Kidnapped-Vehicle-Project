@@ -33,20 +33,27 @@ LandmarkObs transformCoordinate(LandmarkObs obs, Particle particle) {
 	return transformed;
 }
 
-std::vector<int> associate(std::vector<LandmarkObs> observations, Map map_landmarks) {
+void associate(std::vector<LandmarkObs> observations, Map map_landmarks, Particle& p) {
 	std::vector<int> associated;
-	for (int j = 0; j < observations.size(); ++j) {
+	p.associations.clear();
+	p.sense_x.clear();
+	p.sense_y.clear();
+	for (int j = 0; j < observations.size(); ++j)
+	{
 		LandmarkObs o = observations[j];
 		std::vector<double> dists;
-		for (int i = 0; i < map_landmarks.landmark_list.size(); ++i) {
+		for (int i = 0; i < map_landmarks.landmark_list.size(); ++i)
+		{
 			Map::single_landmark_s lm = map_landmarks.landmark_list[i];
 			dists.push_back(sqrt((o.x-lm.x_f)*(o.x-lm.x_f) + (o.y-lm.y_f)*(o.y-lm.y_f)));
 		}
 		std::vector<double>::iterator min_result;
 		min_result = min_element(dists.begin(), dists.end());
-		associated.push_back(distance(dists.begin(), min_result));
+		int index = distance(dists.begin(), min_result);
+		p.associations.push_back(index);
+		p.sense_x.push_back(map_landmarks.landmark_list[index].x_f);
+		p.sense_y.push_back(map_landmarks.landmark_list[index].y_f);
 	}
-	return associated;
 }
 
 void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, Particle& particle, double std_landmark[]) {
@@ -59,14 +66,8 @@ void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, P
 		oy = observations[i].y;
 		stdx = std_landmark[0];
 		stdy = std_landmark[1];
-		// find the associated landmark coordinates. fixme, efficiency
-		for (int k = 0; k < map_landmarks.landmark_list.size(); ++k)
-		{
-			if (landmark_index == map_landmarks.landmark_list[k].id_i) {
-				lx = map_landmarks.landmark_list[k].x_f;
-				ly = map_landmarks.landmark_list[k].y_f;
-			}
-		}
+		lx = particle.sense_x[i];
+		ly = particle.sense_y[i];
 		double weight;
 		weight = exp(-0.5*((ox-lx)*(ox-lx)/(stdx*stdx) + (oy-ly)*(oy-ly)/(stdy*stdy))) / (2*M_PI*stdx*stdy);
 		weights.push_back(weight);
@@ -173,7 +174,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		}
 
 		// do association: associate the transformed observation with the real landmarks, using the nearest neighbour
-		particles[i].associations = associate(transed, map_landmarks);
+		associate(transed, map_landmarks, particles[i]);
 
 		//calculate weights
 		calculateWeight(transed, map_landmarks, particles[i], std_landmark);
@@ -185,12 +186,6 @@ void ParticleFilter::resample() {
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 	std::vector<Particle> picked_particle;
-	// std::random_device rd;
- //  std::mt19937 gen(rd());
-
- //  std::uniform_int_distribution<int> uni(0,num_particles); 
-	// auto index = uni(gen);
-	// print(index);
 
 	std::default_random_engine generator;
   std::uniform_real_distribution<double> distribution(0.0,1.0);
@@ -202,10 +197,8 @@ void ParticleFilter::resample() {
   {
   	imp_weights.push_back(particles[i].weight);
   }
-  // double w_max = max_element(normalizeWeights(particles));
   std::vector<double>::iterator max_result;
   max_result = max_element(imp_weights.begin(), imp_weights.end());
-  // double w_max = max_element(imp_weights.begin(), imp_weights.end()); //error
   double w_max = imp_weights[std::distance(imp_weights.begin(), max_result)];
 
   for (int i = 0; i < num_particles; ++i)

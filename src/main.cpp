@@ -72,7 +72,7 @@ int main()
 
       			// cout << "[sense_x, sense_y, sense_theta]: " << sense_x << ", "<< sense_y << ", " << sense_theta << endl; 
             pf.init(sense_x, sense_y, sense_theta, sigma_pos);
-            return;
+            // return;
     		  }
     		  else {
     			   // Predict the vehicle's next state from previous (noiseless control) data.

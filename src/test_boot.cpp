@@ -107,7 +107,7 @@ LandmarkObs transformCoordinate(LandmarkObs obs, Particle particle) {
 	return transformed;
 }
 
-std::vector<int> associate(std::vector<LandmarkObs> observations, Map map_landmarks) {
+void associate(std::vector<LandmarkObs> observations, Map map_landmarks, Particle& p) {
 	// it's not correct, it's associate landmark to observation, not vise vurs.
 	// for (int i = 0; i < map_landmarks.landmark_list.size(); ++i)
 	// {
@@ -144,9 +144,11 @@ std::vector<int> associate(std::vector<LandmarkObs> observations, Map map_landma
 		// copy(dists.begin(), dists.end(), v2a);
 		std::vector<double>::iterator min_result;
 		min_result = min_element(dists.begin(), dists.end());
-		associated.push_back(distance(dists.begin(), min_result));
+		int index = distance(dists.begin(), min_result);
+		p.associations.push_back(index);
+		p.sense_x.push_back(map_landmarks.landmark_list[index].x_f);
+		p.sense_y.push_back(map_landmarks.landmark_list[index].y_f);
 	}
-	return associated;
 }
 
 void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, Particle& particle, double std_landmark[]) {
@@ -161,17 +163,19 @@ void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, P
 		oy = observations[i].y;
 		stdx = std_landmark[0];
 		stdy = std_landmark[1];
-		// find the associated landmark coordinates
-		for (int k = 0; k < map_landmarks.landmark_list.size(); ++k)
-		{
-			if (landmark_index == map_landmarks.landmark_list[k].id_i) {
-				lx = map_landmarks.landmark_list[k].x_f;
-				ly = map_landmarks.landmark_list[k].y_f;
-			}
-			// double weight;
-			// weight = exp(-0.5*((ox-lx)*(ox-lx)/(stdx*stdx) + (oy-ly)*(oy-ly)/(stdy*stdy))) / (2*M_PI*stdx*stdy);
-			// weights.push_back(weight);
-		}
+		lx = particle.sense_x[i];
+		ly = particle.sense_y[i];
+		// // find the associated landmark coordinates
+		// for (int k = 0; k < map_landmarks.landmark_list.size(); ++k)
+		// {
+		// 	if (landmark_index == map_landmarks.landmark_list[k].id_i) {
+		// 		lx = map_landmarks.landmark_list[k].x_f;
+		// 		ly = map_landmarks.landmark_list[k].y_f;
+		// 	}
+		// 	// double weight;
+		// 	// weight = exp(-0.5*((ox-lx)*(ox-lx)/(stdx*stdx) + (oy-ly)*(oy-ly)/(stdy*stdy))) / (2*M_PI*stdx*stdy);
+		// 	// weights.push_back(weight);
+		// }
 		double weight;
 		weight = exp(-0.5*((ox-lx)*(ox-lx)/(stdx*stdx) + (oy-ly)*(oy-ly)/(stdy*stdy))) / (2*M_PI*stdx*stdy);
 		weights.push_back(weight);
@@ -276,143 +280,154 @@ std::vector<LandmarkObs> initializeObservations(Particle p) {
 };
 
 
-// int main() {
-// 	//-------------- TEST RESAMPLE --------------
-// 	std::default_random_engine generator;
-//   std::uniform_real_distribution<double> uni(0.0,1.0);
-// 	for (int i = 0; i < 1000; ++i)
-// 	{
-// 		double number = uni(generator);	
-// 		cout << number << endl;
-// 		cout << int(number*100) << endl;
-// 	}
-  
+int main() {
+	//-------------- TEST RESAMPLE --------------
+	// std::default_random_engine generator;
+ //  std::uniform_real_distribution<double> uni(0.0,1.0);
+	// for (int i = 0; i < 1000; ++i)
+	// {
+	// 	double number = uni(generator);	
+	// 	cout << number << endl;
+	// 	cout << int(number*100) << endl;
+	// }
 
-//   //   std::random_device rd;
-//   //   std::mt19937 gen(rd());
+  //   std::random_device rd;
+  //   std::mt19937 gen(rd());
 
-//   //   std::uniform_int_distribution<int> uni(0,100); // guaranteed unbiased
-// 		// auto random_integer = uni(gen);
-// 		// cout << random_integer << endl;
+  //   std::uniform_int_distribution<int> uni(0,100); // guaranteed unbiased
+		// auto random_integer = uni(gen);
+		// cout << random_integer << endl;
 
-//     // std::discrete_distribution<> d({40, 10, 10, 40});
-//     // std::map<int, int> m;
-//     // cout << d(gen) << endl;
-//     // for(int n=0; n<10000; ++n) {
-//     //     ++m[d(gen)];
-//     // }
-//     // for(auto p : m) {
-//     //     std::cout << p.first << " generated " << p.second << " times\n";
-//     // }
-// 	// // -------------- TEST THE WIGHTS CALCULATION --------------
-// 	// double sigma_landmark [2] = {0.3, 0.3};
-// 	// Map mp = initializeMap();
-// 	// Particle p = initializeParticle();
-// 	// std::vector<LandmarkObs> observations = initializeObservations(p);
-// 	// p.associations = associate(observations, mp);
-// 	// printIntVector(p.associations);
-// 	// calculateWeight(observations, mp, p, sigma_landmark);
-// 	// cout << "WIGHTS:" << p.weight << endl;
-// 	// std::vector<Particle> particles;
-// 	// particles.push_back(p);
-// 	// normalizeWeights(particles);
-// 	// for (int i = 0; i < particles.size(); ++i)
-// 	// {
-// 	// 	cout << particles[i].weight << endl;
-// 	// }
+    // std::discrete_distribution<> d({40, 10, 10, 40});
+    // std::map<int, int> m;
+    // cout << d(gen) << endl;
+    // for(int n=0; n<10000; ++n) {
+    //     ++m[d(gen)];
+    // }
+    // for(auto p : m) {
+    //     std::cout << p.first << " generated " << p.second << " times\n";
+    // }
+	// // -------------- TEST THE WIGHTS CALCULATION --------------
+	double sigma_landmark [2] = {0.3, 0.3};
+	Map mp = initializeMap();
+	Particle p = initializeParticle();
+	std::vector<LandmarkObs> observations = initializeObservations(p);
+	associate(observations, mp, p);
+	printIntVector(p.associations);
+	calculateWeight(observations, mp, p, sigma_landmark);
+	cout << "WIGHTS:" << p.weight << endl;
+	std::vector<Particle> particles;
+	particles.push_back(p);
+	normalizeWeights(particles);
+	for (int i = 0; i < particles.size(); ++i)
+	{
+		cout << particles[i].weight << endl;
+	}
 
-// 	///*
-// 	// -------------- TEST THE ASSOCIATION --------------
-//   // int A[10] = {0, 2, 3, 1, 10, 34, 4};
-//   // const int N = sizeof(A) / sizeof(int);
-//   // std::vector<double> A;
-//   // A.push_back(0.88778);
-//   // A.push_back(4.778998);
-//   // A.push_back(3.543);
-//   // A.push_back(3.90);
-//   // A.push_back(300.90);
+	///*
+	// -------------- TEST THE ASSOCIATION --------------
+  // int A[10] = {0, 2, 3, 1, 10, 34, 4};
+  // const int N = sizeof(A) / sizeof(int);
+  // std::vector<double> A;
+  // A.push_back(0.88778);
+  // A.push_back(4.778998);
+  // A.push_back(3.543);
+  // A.push_back(3.90);
+  // A.push_back(300.90);
 
-//   // //this works
-//   // std::vector<double>::iterator result;
-//   // result = max_element(A.begin(), A.end());
-//   // std::cout << "max element at: " << std::distance(A.begin(), result) << '\n'; 
+  // //this works
+  // std::vector<double>::iterator result;
+  // result = max_element(A.begin(), A.end());
+  // std::cout << "max element at: " << std::distance(A.begin(), result) << '\n'; 
 
-//   // cout << "Index of max element: "
-//   //      // << std::distance(A, max_element(begin(A), end(A)))
-//   // 				// << std::distance(begin(A), end(A))
-//   //      << max_element(A.begin(), A.end())
-//   //      << endl;
+  // cout << "Index of max element: "
+  //      // << std::distance(A, max_element(begin(A), end(A)))
+  // 				// << std::distance(begin(A), end(A))
+  //      << max_element(A.begin(), A.end())
+  //      << endl;
 
-//   // Map map = initializeMap();
-//   // Particle p = initializeParticle();
-//   // std::vector<LandmarkObs> observations = initializeObservations(p);
+  // Map map = initializeMap();
+  // Particle p = initializeParticle();
+  // std::vector<LandmarkObs> observations = initializeObservations(p);
 
-//   // std::vector<int> v;
-//   // v = associate(observations, map);
-//   // for (int i = 0; i < v.size(); ++i)
-//   // {
-//   // 	cout << v[i] << endl;
-//   // }
-// 	// 
-// 	/*	
-// 	// -------------- TEST THE TRANSFORMATION --------------
-// 	// cout << "hello, world" << endl;
-// 	// std::vector<double> o;
-// 	// o.push_back(2);
-// 	// o.push_back(2);
-// 	// o.push_back(-90.0/180*M_PI);
-// 	// // o[0] = 2;
-// 	// // o[1] = 2;
-// 	// // o[2] = -90/180*M_PI;
-// 	// std::vector<double> p;
-// 	// p.push_back(4);
-// 	// p.push_back(5);
-// 	// // p[0] = 4;
-// 	// // p[1] = 5;
+  // std::vector<int> v;
+  // associate(observations, map, p);
+  // for (int i = 0; i < p.associations.size(); ++i)
+  // {
+  // 	cout << p.associations[i] << " ";
+  // }
+  // cout << endl;
+  // for (int i = 0; i < p.associations.size(); ++i)
+  // {
+  // 	cout << p.sense_x[i] << " ";
+  // }
+  // cout << endl;
+  // for (int i = 0; i < p.associations.size(); ++i)
+  // {
+  // 	cout << p.sense_y[i] << " ";
+  // }
+  // cout << endl;
 
-// 	LandmarkObs o;
-// 	// o.x = 0;
-// 	// o.y = -4;
-// 	o.x = 2;
-// 	o.y = 2;
-// 	o.id = 1;
+	// 
+	/*	
+	// -------------- TEST THE TRANSFORMATION --------------
+	// cout << "hello, world" << endl;
+	// std::vector<double> o;
+	// o.push_back(2);
+	// o.push_back(2);
+	// o.push_back(-90.0/180*M_PI);
+	// // o[0] = 2;
+	// // o[1] = 2;
+	// // o[2] = -90/180*M_PI;
+	// std::vector<double> p;
+	// p.push_back(4);
+	// p.push_back(5);
+	// // p[0] = 4;
+	// // p[1] = 5;
 
-
-// 	Particle p;
-// 	p.x = 4;
-// 	p.y = 5;
-// 	// p.theta = -90/180*M_PI;   // 90/180 = 0. this leads to calculation error;
-// 	p.theta = -90.0/180*M_PI;
-
-// 	// std::vector<double> t = transformCoordinate(o, p);
-// 	LandmarkObs t;
-// 	t = transformCoordinate(o, p);
-// 	cout << "result==" << endl;
-// 	// cout << t[0] << ", " << t[1] << endl;
-// 	cout << t.x << ", " << t.y << ", " << t.id << endl;
-// 	cout << o.x << ", " << o.y << endl;
-// 	*/
-// 	return 0;
-// }
+	LandmarkObs o;
+	// o.x = 0;
+	// o.y = -4;
+	o.x = 2;
+	o.y = 2;
+	o.id = 1;
 
 
-int main() 
-{
-    std::vector<double> v; //{ 3, 1, 4 };
-    v.push_back(3.3);
-    v.push_back(1.33);
-    v.push_back(4.890);
+	Particle p;
+	p.x = 4;
+	p.y = 5;
+	// p.theta = -90/180*M_PI;   // 90/180 = 0. this leads to calculation error;
+	p.theta = -90.0/180*M_PI;
 
-    std::vector<double>::iterator min_result;
-    min_result = min_element(v.begin(), v.end());
-    int index = std::distance(v.begin(), min_result);
-    cout << v[index] << endl;
-
-    std::cout << "distance(first, last) = "
-              << std::distance(v.begin(), v.end()) << '\n'
-              << "distance(last, first) = "
-              << std::distance(v.end(), v.begin()) << '\n';
+	// std::vector<double> t = transformCoordinate(o, p);
+	LandmarkObs t;
+	t = transformCoordinate(o, p);
+	cout << "result==" << endl;
+	// cout << t[0] << ", " << t[1] << endl;
+	cout << t.x << ", " << t.y << ", " << t.id << endl;
+	cout << o.x << ", " << o.y << endl;
+	*/
+	return 0;
 }
+
+
+// int main() 
+// {
+//     std::vector<double> v; //{ 3, 1, 4 };
+//     v.push_back(3.3);
+//     v.push_back(1.33);
+//     v.push_back(4.890);
+
+//     std::vector<double>::iterator min_result;
+//     min_result = min_element(v.begin(), v.end());
+//     int index = std::distance(v.begin(), min_result);
+//     cout << v[index] << endl;
+
+//     std::cout << "distance(first, last) = "
+//               << std::distance(v.begin(), v.end()) << '\n'
+//               << "distance(last, first) = "
+//               << std::distance(v.end(), v.begin()) << '\n';
+// }
 
 
 
