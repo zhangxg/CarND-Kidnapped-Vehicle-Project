@@ -23,7 +23,6 @@ struct Particle {
 };
 
 
-
 class ParticleFilter {
 	
 	// Number of particles to draw
