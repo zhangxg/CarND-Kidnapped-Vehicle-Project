@@ -94,12 +94,11 @@ void normalizeWeights(std::vector<Particle>& particles) {
 
 // -------------------------- requrird methods -----------------------
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
-	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
-	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
+	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of x, y, theta and their uncertainties from GPS) and all weights to 1. 
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
-	num_particles = 100;
+	num_particles = 10;
 	default_random_engine gen;
 	normal_distribution<double> dist_x(x, std[0]);
 	normal_distribution<double> dist_y(y, std[1]);
@@ -115,6 +114,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		particles.push_back(particle);
 	}
 	is_initialized = true;
+	cout << "Initialize done." << endl;
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
@@ -142,6 +142,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		particles[i].y = dist_y(gen);
 		particles[i].theta = dist_theta(gen);
 	}
+	cout << "prediction done!" << endl;
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, 
@@ -179,6 +180,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		//calculate weights
 		calculateWeight(transed, map_landmarks, particles[i], std_landmark);
 	}
+
+	cout << "updateWeights done" << endl;
 }
 
 void ParticleFilter::resample() {
@@ -212,6 +215,8 @@ void ParticleFilter::resample() {
   }
 
   normalizeWeights(picked_particle);
+
+  cout << "Resample done" << endl;
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
@@ -235,28 +240,34 @@ Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> ass
 
 string ParticleFilter::getAssociations(Particle best)
 {
+	cout << "get associations start" << endl;
 	vector<int> v = best.associations;
 	stringstream ss;
-    copy( v.begin(), v.end(), ostream_iterator<int>(ss, " "));
-    string s = ss.str();
-    s = s.substr(0, s.length()-1);  // get rid of the trailing space
-    return s;
+  copy( v.begin(), v.end(), ostream_iterator<int>(ss, " "));
+  string s = ss.str();
+  s = s.substr(0, s.length()-1);  // get rid of the trailing space
+	cout << "get associations end" << endl;
+  return s;
 }
 string ParticleFilter::getSenseX(Particle best)
 {
+	cout << "get getSenseX start" << endl;
 	vector<double> v = best.sense_x;
 	stringstream ss;
-    copy( v.begin(), v.end(), ostream_iterator<float>(ss, " "));
-    string s = ss.str();
-    s = s.substr(0, s.length()-1);  // get rid of the trailing space
-    return s;
+  copy( v.begin(), v.end(), ostream_iterator<float>(ss, " "));
+  string s = ss.str();
+  s = s.substr(0, s.length()-1);  // get rid of the trailing space
+  cout << "get getSenseX end" << endl;
+  return s;
 }
 string ParticleFilter::getSenseY(Particle best)
 {
+	cout << "get getSenseY start" << endl;
 	vector<double> v = best.sense_y;
 	stringstream ss;
-    copy( v.begin(), v.end(), ostream_iterator<float>(ss, " "));
-    string s = ss.str();
-    s = s.substr(0, s.length()-1);  // get rid of the trailing space
-    return s;
+  copy( v.begin(), v.end(), ostream_iterator<float>(ss, " "));
+  string s = ss.str();
+  s = s.substr(0, s.length()-1);  // get rid of the trailing space
+  cout << "get getSenseY end" << endl;
+  return s;
 }
