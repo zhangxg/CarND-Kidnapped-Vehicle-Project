@@ -94,79 +94,76 @@ void normalizeWeights(std::vector<Particle>& particles) {
 
 // -------------------------- requrird methods -----------------------
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
-	// Sets the number of particles. Initializes all particles to first position (based on estimates of
-  // x, y, theta and their uncertainties from GPS) and all weights to 1.
-	// Adds random Gaussian noise to each particle.
-  
-  // Set number of particles
-  // *** Can be tuned ***
-  num_particles = 100;
-    
-  // Resize weights vector based on num_particles
-  weights.resize(num_particles);
-    
-  // Resize vector of particles
-  particles.resize(num_particles);
-  
-  // Engine for later generation of particles
-  random_device rd;
-  default_random_engine gen(rd());
-    
-  // Creates a normal (Gaussian) distribution for x, y and theta (yaw).
-  normal_distribution<double> dist_x(x, std[0]);
-  normal_distribution<double> dist_y(y, std[1]);
-  normal_distribution<double> dist_theta(theta, std[2]);
-    
-  // Initializes particles - from the normal distributions set above
-  for (int i = 0; i < num_particles; ++i) {
-      
-    // Add generated particle data to particles class
-    particles[i].id = i;
-    particles[i].x = dist_x(gen);
-    particles[i].y = dist_y(gen);
-    particles[i].theta = dist_theta(gen);
-    particles[i].weight = 1.0;
-      
-  }
-    
-  // Show as initialized; no need for prediction yet
-  is_initialized = true;
+	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
+	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
+	// Add random Gaussian noise to each particle.
+	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
+
+	num_particles = 10;
+	default_random_engine gen;
+	normal_distribution<double> dist_x(x, std[0]);
+	normal_distribution<double> dist_y(y, std[1]);
+	normal_distribution<double> dist_theta(theta, std[2]); //in radian
+	for (int i = 0; i < num_particles; ++i)
+	{
+		Particle particle;
+		particle.id = i;
+		particle.x = dist_x(gen);
+		particle.y = dist_y(gen);
+		particle.theta = dist_theta(gen);
+		particle.weight = 1;
+		particles.push_back(particle);
+	}
+	is_initialized = true;
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
-	// Adds measurements for velocity and yaw_rate to each particle and adds random Gaussian noise.
-  
-  // Engine for later generation of particles
-  default_random_engine gen;
-  
-  // Make distributions for adding noise
-  normal_distribution<double> dist_x(0, std_pos[0]);
-  normal_distribution<double> dist_y(0, std_pos[1]);
-  normal_distribution<double> dist_theta(0, std_pos[2]);
-  
-  // Different equations based on if yaw_rate is zero or not
-  for (int i = 0; i < num_particles; ++i) {
-    
-    if (abs(yaw_rate) != 0) {
-      // Add measurements to particles
-      particles[i].x += (velocity/yaw_rate) * (sin(particles[i].theta + (yaw_rate * delta_t)) - sin(particles[i].theta));
-      particles[i].y += (velocity/yaw_rate) * (cos(particles[i].theta) - cos(particles[i].theta + (yaw_rate * delta_t)));
-      particles[i].theta += yaw_rate * delta_t;
-      
-    } else {
-      // Add measurements to particles
-      particles[i].x += velocity * delta_t * cos(particles[i].theta);
-      particles[i].y += velocity * delta_t * sin(particles[i].theta);
-      // Theta will stay the same due to no yaw_rate
-      
-    }
+	// TODO: Add measurements to each particle and add random Gaussian noise.
+	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
+	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
+	//  http://www.cplusplus.com/reference/random/default_random_engine/
+	
+	// cout << "entered prediction" << endl;
 
-    // Add noise to the particles
-    particles[i].x += dist_x(gen);
-    particles[i].y += dist_y(gen);
-    particles[i].theta += dist_theta(gen);
-    
-  }
+	default_random_engine gen;
+	double x, y, theta;
+	std::vector<double> s;
+	for (int i = 0; i < num_particles; ++i)
+	{
+		// cout << "i" << endl;
+		// cout << particles.size() << endl;
+		// cout << s.size() << endl;
+		
+		s.push_back(particles[i].x);
+		s.push_back(particles[i].y);
+		s.push_back(particles[i].theta);
+
+		// cout << s[0] << endl;
+
+		// ERROR: i originallly used below code to assign values, 
+		// this produces the "segment fault" error. 
+
+		// s[0] = particles[i].x;
+		// s[1] = particles[i].y;
+		// s[2] = particles[i].theta;
+
+		// cout << "init value" << endl;
+
+		x = s[0] + velocity / yaw_rate * (sin(s[2] + yaw_rate * delta_t) - sin(s[2]));
+		y = s[1] + velocity / yaw_rate * (cos(s[2]) - cos(s[2] + yaw_rate * delta_t));
+		theta = s[2] + yaw_rate * delta_t;
+
+		// cout << "calculate new value" << endl;
+
+		normal_distribution<double> dist_x(x, std_pos[0]);
+		normal_distribution<double> dist_y(y, std_pos[1]);
+		normal_distribution<double> dist_theta(theta, std_pos[2]);
+		particles[i].x = dist_x(gen);
+		particles[i].y = dist_y(gen);
+		particles[i].theta = dist_theta(gen);
+
+		// cout << "add normal distributtion" << endl;
+	}
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, 

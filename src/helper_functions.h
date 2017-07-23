@@ -71,10 +71,14 @@ inline double * getError(double gt_x, double gt_y, double gt_theta, double pf_x,
  */
 inline bool read_map_data(std::string filename, Map& map) {
 
+	using namespace std;
+
+	// cout << "helper 2, read map" << endl;
 	// Get file of map:
 	std::ifstream in_file_map(filename.c_str(),std::ifstream::in);
 	// Return if we can't open the file.
 	if (!in_file_map) {
+		// cout << "!in_file_map";
 		return false;
 	}
 	
