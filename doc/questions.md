@@ -21,6 +21,27 @@ one iteration done
 [1]    30179 segmentation fault  ./particle_filter
 ```
 
-how about try the code without the simulator? 
+the "segnetation fault" problem is caused by below code:
+```
+        // s[0] = particles[i].x;
+        // s[1] = particles[i].y;
+        // s[2] = particles[i].theta;
+        // shoud be change to:
+        s.push_back(particles[i].x);
+        s.push_back(particles[i].y);
+        s.push_back(particles[i].theta);
+        // ERROR: i originallly used below code to assign values, 
+        // this produces the "segment fault" error. 
+
+```
+
+    how about try the code without the simulator? 
+get the first version code from github, integrated the main coce without the simulator.
+
+2. question: the `mywork_with_error` branch can run the code without "segment fault", merged this branch to master, why the master has this error?
+
+
+
+
 
 
