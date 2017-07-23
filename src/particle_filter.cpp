@@ -140,6 +140,9 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 
 		// cout << s[0] << endl;
 
+		// ERROR: i originallly used below code to assign values, 
+		// this produces the "segment fault" error. 
+
 		// s[0] = particles[i].x;
 		// s[1] = particles[i].y;
 		// s[2] = particles[i].theta;
