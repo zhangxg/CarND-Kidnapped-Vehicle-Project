@@ -124,19 +124,22 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
 	
 	// cout << "entered prediction" << endl;
-
 	default_random_engine gen;
-	double x, y, theta;
-	std::vector<double> s;
+	normal_distribution<double> dist_x(0, std_pos[0]);
+	normal_distribution<double> dist_y(0, std_pos[1]);
+	normal_distribution<double> dist_theta(0, std_pos[2]);
+	// double x, y, theta;
+	// std::vector<double> s;
+	
 	for (int i = 0; i < num_particles; ++i)
 	{
 		// cout << "i" << endl;
 		// cout << particles.size() << endl;
 		// cout << s.size() << endl;
 		
-		s.push_back(particles[i].x);
-		s.push_back(particles[i].y);
-		s.push_back(particles[i].theta);
+		// s.push_back(particles[i].x);
+		// s.push_back(particles[i].y);
+		// s.push_back(particles[i].theta);
 
 		// cout << s[0] << endl;
 
@@ -149,18 +152,20 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 
 		// cout << "init value" << endl;
 
-		x = s[0] + velocity / yaw_rate * (sin(s[2] + yaw_rate * delta_t) - sin(s[2]));
-		y = s[1] + velocity / yaw_rate * (cos(s[2]) - cos(s[2] + yaw_rate * delta_t));
-		theta = s[2] + yaw_rate * delta_t;
-
+		if (abs(yaw_rate) > 0.0001) {
+			particles[i].x += velocity / yaw_rate * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
+			particles[i].y += velocity / yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t));
+			particles[i].theta += yaw_rate * delta_t;
+		} else {
+			particles[i].x += velocity * delta_t * cos(particles[i].theta);
+			particles[i].y += velocity * delta_t * sin(particles[i].theta);
+		}
+		
 		// cout << "calculate new value" << endl;
-
-		normal_distribution<double> dist_x(x, std_pos[0]);
-		normal_distribution<double> dist_y(y, std_pos[1]);
-		normal_distribution<double> dist_theta(theta, std_pos[2]);
-		particles[i].x = dist_x(gen);
-		particles[i].y = dist_y(gen);
-		particles[i].theta = dist_theta(gen);
+		// add randomsome
+		particles[i].x += dist_x(gen);
+		particles[i].y += dist_y(gen);
+		particles[i].theta += dist_theta(gen);
 
 		// cout << "add normal distributtion" << endl;
 	}
