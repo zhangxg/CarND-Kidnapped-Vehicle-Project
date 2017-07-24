@@ -99,7 +99,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
-	num_particles = 10;
+	num_particles = 100;
 	default_random_engine gen;
 	normal_distribution<double> dist_x(x, std[0]);
 	normal_distribution<double> dist_y(y, std[1]);
@@ -194,7 +194,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		{
 			transed.push_back(transformCoordinate(observations[j], particles[i]));
 		}
-
 		// do association: associate the transformed observation with the real landmarks, using the nearest neighbour
 		associate(transed, map_landmarks, particles[i]);
 
