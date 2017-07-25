@@ -23,8 +23,8 @@ set(sources
 #     11_Markov_Localization/src/measurement_package.h
 
     src/particle_filter.cpp 
-    src/test_main.cpp
-#    src/main.cpp
+#    src/test_main.cpp
+    src/main.cpp
 #   src/test_boot.cpp
     )
 
