@@ -33,6 +33,20 @@ LandmarkObs transformCoordinate(LandmarkObs obs, Particle particle) {
 	return transformed;
 }
 
+LandmarkObs transformCoordinateV2(LandmarkObs o, Particle p) {
+	LandmarkObs trans;
+	// trans.id = p.id;
+	// trans.x = p.x * cos(p.theta) - p.y * sin(p.theta) + o.x;
+	// trans.y = p.x * sin(p.theta) + p.y * cos(p.theta) + o.y;
+	// cout << "enter transfer coordinates" << endl;
+
+	trans.id = o.id;
+	trans.x = o.x * cos(p.theta) - o.y * sin(p.theta) + p.x;
+	trans.y = o.x * sin(p.theta) + o.y * cos(p.theta) + p.y;
+
+	return trans;
+}
+
 void associate(std::vector<LandmarkObs> observations, Map map_landmarks, Particle& p) {
 	std::vector<int> associated;
 	p.associations.clear();
@@ -54,6 +68,34 @@ void associate(std::vector<LandmarkObs> observations, Map map_landmarks, Particl
 		p.sense_x.push_back(map_landmarks.landmark_list[index].x_f);
 		p.sense_y.push_back(map_landmarks.landmark_list[index].y_f);
 	}
+}
+
+vector<double> associateV2(LandmarkObs o, Map map_landmarks, double sensor_range, Particle p) {
+	// cout << "enter associate" << endl;
+	vector<Map::single_landmark_s> landmarks = map_landmarks.landmark_list;
+	vector<double> dist_obs_landmark (landmarks.size());
+	double dist_p_landmark;
+	for (int i = 0; i < landmarks.size(); ++i) {
+		dist_p_landmark = sqrt(pow((landmarks[i].x_f - p.x), 2) + pow((landmarks[i].y_f - p.y), 2));
+		// cout << "dis_p_landmark" << dist_p_landmark << endl;
+		if (dist_p_landmark < sensor_range) {
+			dist_obs_landmark[i] = sqrt(pow((o.x - landmarks[i].x_f), 2) + pow((o.y - landmarks[i].y_f), 2));
+		} else {
+			dist_obs_landmark[i] = 9999999.0;
+		}
+	}
+	// find the nearest neighbour of the observation.
+	std::vector<double>::iterator min_result;
+	min_result = min_element(dist_obs_landmark.begin(), dist_obs_landmark.end());
+	int nn_index = distance(dist_obs_landmark.begin(), min_result);
+	// cout << "found nn" << nn_index  << endl;
+	vector<double> nn (2);
+	nn[0] = landmarks[nn_index].x_f;
+	nn[1] = landmarks[nn_index].y_f;
+
+	// cout << "leave nn" << endl;
+
+	return nn;
 }
 
 void calculateWeight(std::vector<LandmarkObs> observations, Map map_landmarks, Particle& particle, double std_landmark[]) {
@@ -100,6 +142,8 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
 	num_particles = 100;
+	weights.resize(num_particles);
+	particles.resize(num_particles);
 	default_random_engine gen;
 	normal_distribution<double> dist_x(x, std[0]);
 	normal_distribution<double> dist_y(y, std[1]);
@@ -191,19 +235,38 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
 
+	const double a = 1 / (2 * M_PI * std_landmark[0] * std_landmark[1]);
+	// The denominators of the mvGd also stay the same
+	const double x_denom = 2 * std_landmark[0] * std_landmark[0];
+	const double y_denom = 2 * std_landmark[1] * std_landmark[1];
+
 	for (int i = 0; i < num_particles; ++i)
 	{
 		// do transformation: convert the car coordinates to the map coordinates;
-		std::vector<LandmarkObs> transed;
+		// std::vector<LandmarkObs> transed;
+		// cout << "particle: " << particles[i].x << endl;
+		double totalWeight = 1;
 		for (int j = 0; j < observations.size(); ++j)
 		{
-			transed.push_back(transformCoordinate(observations[j], particles[i]));
-		}
-		// do association: associate the transformed observation with the real landmarks, using the nearest neighbour
-		associate(transed, map_landmarks, particles[i]);
+			// transed.push_back(transformCoordinateV2(observations[j], particles[i]));
+			// cout << "obs: " << observations[j].x << endl; 
+			LandmarkObs o = transformCoordinateV2(observations[j], particles[i]);
+			vector<double> asso = associateV2(o, map_landmarks, sensor_range, particles[i]);
 
+			// calculate weights
+			double x_diff = o.x - asso[0];
+			double y_diff = o.y - asso[1];
+			double b = ((x_diff * x_diff) / x_denom) + ((y_diff * y_diff) / y_denom);
+			totalWeight *= a * exp(-b);
+ 		}
+		// do association: associate the transformed observation with the real landmarks, using the nearest neighbour
+		// associate(transed, map_landmarks, particles[i]);
 		//calculate weights
-		calculateWeight(transed, map_landmarks, particles[i], std_landmark);
+		// calculateWeight(transed, map_landmarks, particles[i], std_landmark);
+
+		//update weight
+		particles[i].weight = totalWeight;
+    	weights[i] = particles[i].weight;
 	}
 }
 
@@ -211,33 +274,48 @@ void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight. 
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
-	std::vector<Particle> picked_particle;
+// 	std::vector<Particle> picked_particle;
 
-	std::default_random_engine generator;
-  std::uniform_real_distribution<double> distribution(0.0,1.0);
-  int index = int(distribution(generator)*num_particles);
+// 	std::default_random_engine generator;
+//   std::uniform_real_distribution<double> distribution(0.0,1.0);
+//   int index = int(distribution(generator)*num_particles);
 
-  double  beta = 0;
-  std::vector<double> imp_weights;
-  for (int i = 0; i < num_particles; ++i)
-  {
-  	imp_weights.push_back(particles[i].weight);
+//   double  beta = 0;
+//   std::vector<double> imp_weights;
+//   for (int i = 0; i < num_particles; ++i)
+//   {
+//   	imp_weights.push_back(particles[i].weight);
+//   }
+//   std::vector<double>::iterator max_result;
+//   max_result = max_element(imp_weights.begin(), imp_weights.end());
+//   double w_max = imp_weights[std::distance(imp_weights.begin(), max_result)];
+
+//   for (int i = 0; i < num_particles; ++i)
+//   {
+//   	beta += distribution(generator)* 2 * w_max;
+//   	while (imp_weights[index] < beta) {
+//   		beta -= imp_weights[index];
+//   		index = (index + 1) % num_particles;
+//   	}
+//   	picked_particle.push_back(particles[index]);
+//   }
+
+//   normalizeWeights(picked_particle);
+
+  // Vector for new particles
+  vector<Particle> new_particles (num_particles);
+  
+  // Use discrete distribution to return particles by weight
+  random_device rd;
+  default_random_engine gen(rd());
+  for (int i = 0; i < num_particles; ++i) {
+    discrete_distribution<int> index(weights.begin(), weights.end());
+    new_particles[i] = particles[index(gen)];
+    
   }
-  std::vector<double>::iterator max_result;
-  max_result = max_element(imp_weights.begin(), imp_weights.end());
-  double w_max = imp_weights[std::distance(imp_weights.begin(), max_result)];
-
-  for (int i = 0; i < num_particles; ++i)
-  {
-  	beta += distribution(generator)* 2 * w_max;
-  	while (imp_weights[index] < beta) {
-  		beta -= imp_weights[index];
-  		index = (index + 1) % num_particles;
-  	}
-  	picked_particle.push_back(particles[index]);
-  }
-
-  normalizeWeights(picked_particle);
+  
+  // Replace old particles with the resampled particles
+  particles = new_particles;
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
