@@ -335,34 +335,34 @@ Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> ass
 
 string ParticleFilter::getAssociations(Particle best)
 {
-	cout << "get associations start" << endl;
+	// cout << "get associations start" << endl;
 	vector<int> v = best.associations;
 	stringstream ss;
   copy( v.begin(), v.end(), ostream_iterator<int>(ss, " "));
   string s = ss.str();
   s = s.substr(0, s.length()-1);  // get rid of the trailing space
-	cout << "get associations end" << endl;
+	// cout << "get associations end" << endl;
   return s;
 }
 string ParticleFilter::getSenseX(Particle best)
 {
-	cout << "get getSenseX start" << endl;
+	// cout << "get getSenseX start" << endl;
 	vector<double> v = best.sense_x;
 	stringstream ss;
   copy( v.begin(), v.end(), ostream_iterator<float>(ss, " "));
   string s = ss.str();
   s = s.substr(0, s.length()-1);  // get rid of the trailing space
-  cout << "get getSenseX end" << endl;
+//   cout << "get getSenseX end" << endl;
   return s;
 }
 string ParticleFilter::getSenseY(Particle best)
 {
-	cout << "get getSenseY start" << endl;
+	// cout << "get getSenseY start" << endl;
 	vector<double> v = best.sense_y;
 	stringstream ss;
   copy( v.begin(), v.end(), ostream_iterator<float>(ss, " "));
   string s = ss.str();
   s = s.substr(0, s.length()-1);  // get rid of the trailing space
-  cout << "get getSenseY end" << endl;
+//   cout << "get getSenseY end" << endl;
   return s;
 }

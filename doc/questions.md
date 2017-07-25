@@ -40,6 +40,9 @@ get the first version code from github, integrated the main coce without the sim
 
 2. question: the `mywork_with_error` branch can run the code without "segment fault", merged this branch to master, why the master has this error?
 
+3. start the code in vsc, the simulater time out; start from terminal, the simulator succeeds, what's the difference?
+
+
 
 
 
