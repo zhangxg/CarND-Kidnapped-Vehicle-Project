@@ -224,8 +224,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
-		std::vector<LandmarkObs> observations, Map map_landmarks) {
-	// Updates the weights of each particle using a multi-variate Gaussian distribution. You can read
+		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
 	//   more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
   // First, when iterating through each particle, need to transform observation points to map coordinates.
   // Next, associate each observation to its nearest landmark. The distribution can then be calculated.
@@ -314,23 +313,17 @@ void ParticleFilter::resample() {
 
 }
 
-Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
+Particle ParticleFilter::SetAssociations(Particle& particle, const std::vector<int>& associations, 
+                                     const std::vector<double>& sense_x, const std::vector<double>& sense_y)
 {
-	//particle: the particle to assign each listed association, and association's (x,y) world coordinates mapping to
-	// associations: The landmark id that goes along with each listed association
-	// sense_x: the associations x mapping already converted to world coordinates
-	// sense_y: the associations y mapping already converted to world coordinates
+    //particle: the particle to assign each listed association, and association's (x,y) world coordinates mapping to
+    // associations: The landmark id that goes along with each listed association
+    // sense_x: the associations x mapping already converted to world coordinates
+    // sense_y: the associations y mapping already converted to world coordinates
 
-	//Clear the previous associations
-	particle.associations.clear();
-	particle.sense_x.clear();
-	particle.sense_y.clear();
-
-	particle.associations= associations;
- 	particle.sense_x = sense_x;
- 	particle.sense_y = sense_y;
-
- 	return particle;
+    particle.associations= associations;
+    particle.sense_x = sense_x;
+    particle.sense_y = sense_y;
 }
 
 string ParticleFilter::getAssociations(Particle best)
